@@ -1,4 +1,4 @@
-package server;
+package lk.udith.chatapp.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -19,7 +19,7 @@ public class Server {
                 Thread thread=new Thread(clientHandler);
                 thread.start();
             }
-        }catch (Exception e){
+        }catch (IOException e){
             System.out.println(e.getMessage());
         }
     }
@@ -34,6 +34,7 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException {
+        System.out.println("Waiting for clients.....!");
         ServerSocket serverSocket=new ServerSocket(1234);
         Server server=new Server(serverSocket);
         server.startServer();

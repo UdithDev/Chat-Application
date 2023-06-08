@@ -1,4 +1,4 @@
-package server;
+package lk.udith.chatapp.server;
 
 import java.io.*;
 import java.net.Socket;
@@ -19,7 +19,7 @@ public class ClientHandler implements Runnable {
             this.clientUserName = bufferedReader.readLine();
             clientHandlers.add(this);
             broadcastMessage("SERVER: " + clientUserName + " has joined the chat");
-        } catch (Exception e) {
+        } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
     }
