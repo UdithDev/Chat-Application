@@ -4,76 +4,53 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class ClientHandler implements Runnable {
-    public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+public class ClientHandler extends Thread {
+
+    private ArrayList<ClientHandler> clientHandlers;
     private Socket socket;
     private BufferedReader bufferedReader; //This will be used to read data
-    private BufferedWriter bufferedWriter;
-    private String clientUserName;
+    private PrintWriter printWriter;
 
-    public ClientHandler(Socket socket) {
+
+    public ClientHandler(Socket socket,ArrayList<ClientHandler> clientHandlers) {
         try {
             this.socket = socket;
-            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            this.clientHandlers=clientHandlers;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.clientUserName = bufferedReader.readLine();
-            clientHandlers.add(this);
-            broadcastMessage("SERVER: " + clientUserName + " has joined the chat");
+            this.printWriter = new PrintWriter(socket.getOutputStream(), true);
+
         } catch (IOException e) {
-            closeEverything(socket, bufferedReader, bufferedWriter);
+          e.printStackTrace();
         }
     }
 
     @Override
     public void run() {
-        String messageFromClient;
-
-        while (socket.isConnected()) {
-            try {
-                messageFromClient = bufferedReader.readLine();
-                broadcastMessage(messageFromClient);
-            } catch (IOException e) {
-                closeEverything(socket, bufferedReader, bufferedWriter);
-                break;
-            }
-        }
-    }
-
-    public void broadcastMessage(String messageToSend) {
-        for (ClientHandler clientHandler : clientHandlers) {
-            try {
-                if (!clientHandler.clientUserName.equals(clientUserName)) {
-                    clientHandler.bufferedWriter.write(messageToSend);
-                    clientHandler.bufferedWriter.newLine();
-                    clientHandler.bufferedWriter.flush();
-                }
-            } catch (IOException e) {
-                closeEverything(socket, bufferedReader, bufferedWriter);
-            }
-        }
-    }
-
-    /*removing client */
-    public void removeClientHandler() {
-        clientHandlers.remove(this);
-        broadcastMessage("SERVER " + clientUserName + " has left the chat!");
-    }
-    public void closeEverything(Socket socket,BufferedReader bufferedReader,BufferedWriter bufferedWriter){
-        removeClientHandler();
         try{
-            if(bufferedReader!=null){
-                bufferedReader.close();
+            String msg;
+            while((msg=bufferedReader.readLine())!=null){
+                if(msg.equalsIgnoreCase("exit")){
+                    break;
+                }
+                for (ClientHandler handler:clientHandlers) {
+                    handler.printWriter.println(msg);
+                }
             }
-            if(bufferedWriter!=null){
-                bufferedWriter.close();
-            }
-            if(socket!=null){
-                socket.close();
-            }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        }catch (Exception e){
 
+        }
+        finally {
+            try{
+                bufferedReader.close();
+                printWriter.close();
+                socket.close();
+            }catch (IOException e){
+
+            }
+        }
     }
+
+
+
 }
 
